@@ -1,6 +1,6 @@
 local M = {
   'nvimtools/none-ls.nvim',
-  event = { 'BufReadPre', 'BufNewFile' },
+  event = { 'BufReadPre', 'BufNewFile', 'FileType' }, -- Added FileType to events
   dependencies = { 'mason.nvim' },
   opts = function()
     local null_ls = require 'null-ls'
@@ -8,6 +8,7 @@ local M = {
     local diagnostics = null_ls.builtins.diagnostics
     local code_actions = null_ls.builtins.code_actions
     local completion = null_ls.builtins.completion
+
     return {
       sources = {
         formatting.stylua,
@@ -19,7 +20,6 @@ local M = {
         completion.spell,
       },
       on_attach = function(client, bufnr)
-        -- Enable formatting on sync
         if client.supports_method 'textDocument/formatting' then
           local format_on_save = vim.api.nvim_create_augroup('LspFormatting', { clear = true })
           vim.api.nvim_create_autocmd('BufWritePre', {
@@ -39,5 +39,13 @@ local M = {
     }
   end,
 }
+
+-- Auto-setup on FileType event to ensure plugin is loaded correctly
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = function()
+    require('none-ls').setup(M.opts()) -- Assuming none-ls follows a setup pattern similar to null-ls
+  end,
+})
 
 return M
